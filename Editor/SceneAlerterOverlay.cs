@@ -29,6 +29,8 @@ namespace ZeroSouth.SceneAlerter
 
         private SocketIOUnity socket;
 
+        private bool isInitialize = false;
+
         private bool isConnected = false;
         public bool IsConnected => isConnected;
 
@@ -146,12 +148,10 @@ namespace ZeroSouth.SceneAlerter
             return false;
         }
 
-        public override void OnCreated()
+        private void Initialize()
         {
-            if (settings == null)
-                return;
+            isInitialize = true;
 
-            base.OnCreated();
             settings = SceneAlerterSettings.GetOrCreateSettings();
 
             opendedCallback = new EditorSceneManager.SceneOpenedCallback(Enter);
@@ -165,6 +165,11 @@ namespace ZeroSouth.SceneAlerter
 
         public override void OnGUI()
         {
+            if (!isInitialize)
+            {
+                Initialize();
+            }
+
             GUILayout.BeginHorizontal();
 
             if (EditorGUIUtility.editingTextField)
