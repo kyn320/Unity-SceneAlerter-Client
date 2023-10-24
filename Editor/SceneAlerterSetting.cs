@@ -20,6 +20,11 @@ namespace ZeroSouth.SceneAlerter
                 AssetDatabase.CreateAsset(settings, settingsPath);
                 AssetDatabase.SaveAssets();
             }
+
+            if (SceneAlerterOverlay.Instance != null)
+            {
+                SceneAlerterOverlay.Instance.OnCreated();
+            }
         }
     }
 
