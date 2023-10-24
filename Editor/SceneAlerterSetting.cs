@@ -6,19 +6,17 @@ using UnityEngine;
 
 namespace ZeroSouth.SceneAlerter
 {
-    internal class SceneAlerterPostProccessor : AssetPostprocessor
+    class SceneAlerterPostProccessor : AssetPostprocessor
     {
         public const string settingsPath = "Packages/com.kyn320.unityscenealerter/SceneAlerterSettings.asset";
 
-        private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             var settings = (SceneAlerterSettings)AssetDatabase.LoadAssetAtPath(settingsPath, typeof(SceneAlerterSettings));
 
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<SceneAlerterSettings>();
-                settings.serverURL = "https://port-0-unity-scenealerter-euegqv2llo151tb1.sel5.cloudtype.app/";
-                settings.autoConnected = true;
                 AssetDatabase.CreateAsset(settings, settingsPath);
                 AssetDatabase.SaveAssets();
             }
@@ -46,8 +44,6 @@ namespace ZeroSouth.SceneAlerter
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<SceneAlerterSettings>();
-                settings.serverURL = "https://port-0-unity-scenealerter-euegqv2llo151tb1.sel5.cloudtype.app/";
-                settings.autoConnected = true;
                 AssetDatabase.CreateAsset(settings, settingsPath);
                 AssetDatabase.SaveAssets();
             }
