@@ -8,6 +8,8 @@ namespace ZeroSouth.SceneAlerter
 {
     internal class SceneAlerterPostProccessor : AssetPostprocessor
     {
+        public const string settingsPath = "Packages/com.kyn320.unityscenealerter/SceneAlerterSettings.asset";
+
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             var settings = (SceneAlerterSettings)AssetDatabase.LoadAssetAtPath(settingsPath, typeof(SceneAlerterSettings));
