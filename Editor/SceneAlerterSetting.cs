@@ -21,7 +21,8 @@ namespace ZeroSouth.SceneAlerter
 
         internal static SceneAlerterSettings GetOrCreateSettings()
         {
-            var settings = AssetDatabase.LoadAssetAtPath<SceneAlerterSettings>(settingsPath);
+            var settings = (SceneAlerterSettings)AssetDatabase.LoadAssetAtPath(settingsPath, typeof(SceneAlerterSettings));
+
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<SceneAlerterSettings>();
