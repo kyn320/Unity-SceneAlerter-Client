@@ -1,6 +1,6 @@
 {
 	"name": "com.kyn320.unityscenealerter",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"displayName": "Scene Alerter",
 	"description": "Shows people using the scene.",
 	"unity": "2019.1",
