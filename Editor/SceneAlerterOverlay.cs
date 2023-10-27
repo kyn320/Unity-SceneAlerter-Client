@@ -115,35 +115,32 @@ namespace ZeroSouth.SceneAlerter
         /// <returns>성공 시 true를 반환합니다.</returns>
         private bool TryReadGitName(out string gitName)
         {
-#if UNITY_EDITOR_WIN // idk
-        // %userprofile%\.gitconfig 파일 가져오기
-        var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var gitConfigPath = Path.Combine(userProfilePath, ".gitconfig");
-        try
-        {
-            // 파일 읽기
-            using var file = File.OpenText(gitConfigPath);
-            var raw = file.ReadToEnd();
-            var lines = raw.Split("\n");
-            foreach (var line in lines)
+            // %userprofile%\.gitconfig 파일 가져오기
+            var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var gitConfigPath = Path.Combine(userProfilePath, ".gitconfig");
+           
+            try
             {
-                var trimmedLine = line.Trim();
-                // name 라인 읽어오기
-                if (trimmedLine.StartsWith("name"))
+                // 파일 읽기
+                using var file = File.OpenText(gitConfigPath);
+                var raw = file.ReadToEnd();
+                var lines = raw.Split("\n");
+                foreach (var line in lines)
                 {
-                    gitName = trimmedLine.Substring(7);
-                    return true;
+                    var trimmedLine = line.Trim();
+                    // name 라인 읽어오기
+                    if (trimmedLine.StartsWith("name"))
+                    {
+                        gitName = trimmedLine.Substring(7);
+                        return true;
+                    }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine(e);
-        }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+            }
 
-        gitName = string.Empty;
-        return false;
-#endif
             gitName = string.Empty;
             return false;
         }
