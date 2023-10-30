@@ -13,14 +13,16 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Reflection;
-using Random = UnityEngine.Random;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
+
 using Debug = System.Diagnostics.Debug;
+using Random = UnityEngine.Random;
 
 namespace ZeroSouth.SceneAlerter
 {
-    [Overlay(typeof(SceneView), "SceneAlerter")]
-    public class SceneAlerterOverlay : IMGUIOverlay
+    [Overlay(typeof(SceneView), "SceneAlerter", true)]
+    public class SceneAlerterOverlay : Overlay, ICreateHorizontalToolbar
     {
         static readonly string NickNamePrefsKey = "SceneAlerter_NickName";
 
@@ -50,10 +52,28 @@ namespace ZeroSouth.SceneAlerter
         private EditorSceneManager.SceneOpenedCallback opendedCallback;
         private EditorSceneManager.SceneClosedCallback closedCallback;
 
+        private TextField nickNameTextField;
+        private Button userCountButton;
+        private Label userNickNameLabel;
+
+        private VisualElement panelElement;
+
         public SceneAlerterOverlay()
         {
             Instance = this;
             nickName = EditorPrefs.GetString(NickNamePrefsKey);
+
+            userCountButton = new Button();
+            nickNameTextField = new TextField();
+            nickNameTextField.RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (e.keyCode == KeyCode.Return)
+                {
+                    nickName = nickNameTextField.value;
+                    RefreshNickname();
+                }
+            });
+            userNickNameLabel = new Label();
         }
 
         /// <summary>
@@ -118,7 +138,7 @@ namespace ZeroSouth.SceneAlerter
             // %userprofile%\.gitconfig 파일 가져오기
             var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var gitConfigPath = Path.Combine(userProfilePath, ".gitconfig");
-           
+
             try
             {
                 // 파일 읽기
@@ -160,76 +180,26 @@ namespace ZeroSouth.SceneAlerter
             }
         }
 
-        public override void OnGUI()
+        public void InitializeAlerter(SceneView sceneView)
         {
-            if (!isInitialize)
-            {
-                Initialize();
-                return;
-            }
-
-            GUILayout.BeginHorizontal();
-
-            if (EditorGUIUtility.editingTextField)
-                isEditNickNameText = true;
-            nickName = EditorGUILayout.TextField(nickName, GUILayout.Width(96));
-            if (isEditNickNameText && !EditorGUIUtility.editingTextField)
-            {
-                isEditNickNameText = false;
-                RefreshNickname();
-            }
-            GUILayout.EndHorizontal();
-
-            static void HorizontalLine(Color color)
-            {
-                var horizontalLine = new GUIStyle
-                {
-                    normal = { background = EditorGUIUtility.whiteTexture },
-                    margin = new RectOffset(0, 0, 4, 4),
-                    fixedHeight = 1
-                };
-
-                var c = GUI.color;
-                GUI.color = color;
-                GUILayout.Box(GUIContent.none, horizontalLine);
-                GUI.color = c;
-            }
-            HorizontalLine(Color.gray);
-
-            if (isConnected)
-            {
-                if(GUILayout.Button($"{currentSceneUserCount}명 작업 중")) 
-                {
-                    showUserList = !showUserList;
-                }
-
-                if (showUserList)
-                {
-                    foreach (var nickName in currentRoomUserList)
-                    {
-                        GUILayout.Label("  " + nickName);
-                    }
-                }
-            }
-            else
-            {
-                if (isWaitForConnect)
-                {
-                    GUILayout.Label("Connecting to Server..");
-                }
-                else
-                {
-                    GUILayout.Label("Please Connecting..");
-                    if (!isWaitForConnect && GUILayout.Button("Connect"))
-                    {
-                        StartConnect();
-                    }
-                }
-            }
+            Initialize();
+            SceneView.beforeSceneGui -= InitializeAlerter;
         }
 
         private void Update(SceneView sceneView)
         {
+            userCountButton.text = $"{currentSceneUserCount}명 사용중";
+
+            userNickNameLabel.text = "";
+
+            for (var i = 0; i < currentSceneUserCount; ++i)
+            {
+                if (i > 0)
+                    userNickNameLabel.text += "\n";
+
+                userNickNameLabel.text += nickName;
+            }
+
             while (actionQueue.Count > 0)
             {
                 var action = actionQueue.Dequeue();
@@ -243,6 +213,7 @@ namespace ZeroSouth.SceneAlerter
         {
             isWaitForConnect = true;
             Debug.Print("Start Connecting Server");
+
             CreateSocket();
             SceneView.duringSceneGui += Update;
         }
@@ -275,6 +246,7 @@ namespace ZeroSouth.SceneAlerter
                 actionQueue.Enqueue(() =>
                 {
                     RefreshNickname();
+                    nickNameTextField.value = nickName;
                 });
             };
 
@@ -375,7 +347,7 @@ namespace ZeroSouth.SceneAlerter
 
         public void Emit(string eventName, string jsonData)
         {
-            if(socket == null)
+            if (socket == null)
                 return;
 
             if (!IsJSON(jsonData))
@@ -436,13 +408,6 @@ namespace ZeroSouth.SceneAlerter
             }
         }
 
-        public override void OnWillBeDestroyed()
-        {
-            base.OnWillBeDestroyed();
-            Leave(EditorSceneManager.GetActiveScene());
-        }
-
-
         public string GetSceneName(string assetPath)
         {
             string assetName = assetPath.Substring(assetPath.LastIndexOf("/") + 1);
@@ -450,5 +415,91 @@ namespace ZeroSouth.SceneAlerter
             return assetName;
         }
 
+        private void ToggleFoldOut()
+        {
+            showUserList = !showUserList;
+            if (!showUserList && panelElement.Contains(userNickNameLabel))
+            {
+                panelElement.Remove(userNickNameLabel);
+            }
+            else
+            {
+                panelElement.Add(userNickNameLabel);
+            }
+        }
+
+        private void TogglePopup()
+        {
+            var activatorRect = GUIUtility.GUIToScreenRect(userCountButton.worldBound);
+            var sceneAlerterPopup = EditorWindow.CreateInstance<SceneAlerterPopup>();
+            sceneAlerterPopup.currentRoomUserList = currentRoomUserList;
+            sceneAlerterPopup.ShowAsDropDown(activatorRect, new Vector2(100, 100));
+        }
+
+        public override void OnCreated()
+        {
+            base.OnCreated();
+            SceneView.beforeSceneGui += InitializeAlerter;
+        }
+
+        public override void OnWillBeDestroyed()
+        {
+            base.OnWillBeDestroyed();
+
+            SceneView.beforeSceneGui -= InitializeAlerter;
+            EditorSceneManager.sceneClosed -= closedCallback;
+            EditorSceneManager.sceneOpened -= opendedCallback;
+
+            Leave(EditorSceneManager.GetActiveScene());
+        }
+
+        public override VisualElement CreatePanelContent()
+        {
+            panelElement = new VisualElement() { name = "Scene Alerter" };
+            userCountButton.clicked -= TogglePopup;
+            userCountButton.clicked += ToggleFoldOut;
+
+            nickNameTextField.value = nickName;
+            panelElement.Add(nickNameTextField);
+
+            userCountButton.name = $"{currentSceneUserCount} 명 사용중";
+            panelElement.Add(userCountButton);
+
+            if (showUserList)
+            {
+                panelElement.Add(userNickNameLabel);
+            }
+
+            return panelElement;
+        }
+
+        public OverlayToolbar CreateHorizontalToolbarContent()
+        {
+            var horizontalOverlayToolbar = new OverlayToolbar();
+            userCountButton.clicked -= ToggleFoldOut;
+            userCountButton.clicked += TogglePopup;
+            horizontalOverlayToolbar.Add(userCountButton);
+
+            return horizontalOverlayToolbar;
+        }
+
+    }
+
+    public class SceneAlerterPopup : EditorWindow
+    {
+        Vector2 scrollPos;
+        public List<string> currentRoomUserList = new List<string>();
+
+        public void OnGUI()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginScrollView(scrollPos);
+            foreach (var nickName in currentRoomUserList)
+            {
+                GUILayout.Label(nickName);
+            }
+            GUILayout.EndScrollView();
+            GUILayout.EndHorizontal();
+        }
     }
 }
