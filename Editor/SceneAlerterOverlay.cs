@@ -197,7 +197,7 @@ namespace ZeroSouth.SceneAlerter
                 if (i > 0)
                     userNickNameLabel.text += "\n";
 
-                userNickNameLabel.text += nickName;
+                userNickNameLabel.text += currentRoomUserList[i];
             }
 
             while (actionQueue.Count > 0)
