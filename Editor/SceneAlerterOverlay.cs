@@ -197,7 +197,10 @@ namespace ZeroSouth.SceneAlerter
 
             if (isConnected)
             {
-                showUserList = EditorGUILayout.Foldout(showUserList, $"{currentSceneUserCount}명 작업 중", true);
+                if(GUILayout.Button($"{currentSceneUserCount}명 작업 중")) 
+                {
+                    showUserList = !showUserList;
+                }
 
                 if (showUserList)
                 {
@@ -373,6 +376,9 @@ namespace ZeroSouth.SceneAlerter
 
         public void Emit(string eventName, string jsonData)
         {
+            if(socket == null)
+                return;
+
             if (!IsJSON(jsonData))
             {
                 Debug.Print($"Emit : {eventName} | {jsonData}");
