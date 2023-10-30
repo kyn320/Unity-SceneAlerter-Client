@@ -165,6 +165,7 @@ namespace ZeroSouth.SceneAlerter
             if (!isInitialize)
             {
                 Initialize();
+                return;
             }
 
             GUILayout.BeginHorizontal();
@@ -204,12 +205,10 @@ namespace ZeroSouth.SceneAlerter
 
                 if (showUserList)
                 {
-                    EditorGUI.indentLevel++;
                     foreach (var nickName in currentRoomUserList)
                     {
                         GUILayout.Label("  " + nickName);
                     }
-                    EditorGUI.indentLevel--;
                 }
             }
             else
