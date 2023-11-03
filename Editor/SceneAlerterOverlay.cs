@@ -192,7 +192,7 @@ namespace ZeroSouth.SceneAlerter
 
             userNickNameLabel.text = "";
 
-            for (var i = 0; i < currentSceneUserCount; ++i)
+            for (var i = 0; i < currentRoomUserList.Count; ++i)
             {
                 if (i > 0)
                     userNickNameLabel.text += "\n";
